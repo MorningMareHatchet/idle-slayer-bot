@@ -9,8 +9,6 @@ import android.view.accessibility.AccessibilityEvent
 
 class IdleSlayerBotService : AccessibilityService() {
 
-    var isAutoclickerActive = false
-
     companion object {
         private var instance: IdleSlayerBotService? = null
         fun getInstance(): IdleSlayerBotService? = instance
