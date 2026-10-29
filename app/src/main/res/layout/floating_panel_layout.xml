@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/panel_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Idle Slayer Bot"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="8dp" />
+
+    <Switch
+        android:id="@+id/switchAutoclicker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Автокликер (Прыжки)"
+        android:textColor="#E0E0E0"
+        android:paddingBottom="4dp" />
+
+    <Switch
+        android:id="@+id/switchUpgrades"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Авто-покупка улучшений"
+        android:textColor="#E0E0E0"
+        android:paddingBottom="4dp" />
+
+    <Switch
+        android:id="@+id/switchChestHunt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Умная Охота за сокровищами"
+        android:textColor="#E0E0E0"
+        android:paddingBottom="4dp" />
+
+    <Switch
+        android:id="@+id/switchFullAfk"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FULL AFK РЕЖИМ"
+        android:textColor="#FF5252"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnRunChestHunt"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:backgroundTint="#388E3C"
+        android:text="Запустить сундуки"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+</LinearLayout>
