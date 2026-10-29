@@ -1,14 +1,14 @@
 package com.example.idleslayerbot
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.Switch
+import android.widget.LinearLayout
 
 class FloatingControlPanel(private val context: Context) {
 
@@ -34,42 +34,33 @@ class FloatingControlPanel(private val context: Context) {
         ).apply {
             gravity = Gravity.TOP or Gravity.START
             x = 100
-            y = 100
+            y = 200
         }
 
-        // Простейшая программная панель управления (без XML-разметки)
-        val layout = android.widget.LinearLayout(context).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setBackgroundColor(android.graphics.Color.parseColor("#CC000000"))
-            setPadding(32, 32, 32, 32)
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#99000000"))
+            setPadding(16, 16, 16, 16)
         }
 
-        val title = android.widget.TextView(context).apply {
-            text = "Idle Slayer Bot"
-            setTextColor(android.graphics.Color.WHITE)
-            textSize = 14f
-            setPadding(0, 0, 0, 16)
-        }
-
-        val autoclickerSwitch = Switch(context).apply {
-            text = "Автокликер"
-            setTextColor(android.graphics.Color.WHITE)
-            setOnCheckedChangeListener { _, isChecked ->
-                (context as? IdleSlayerBotService)?.isAutoclickerActive = isChecked
+        // Кнопка «Клик» (имитирует нажатие в центр экрана или заданную точку)
+        val clickButton = Button(context).apply {
+            text = "▶ Клик"
+            setOnClickListener {
+                IdleSlayerBotService.getInstance()?.clickAt(500f, 1200f)
             }
         }
 
-        val afkSwitch = Switch(context).apply {
-            text = "Full AFK Режим"
-            setTextColor(android.graphics.Color.WHITE)
-            setOnCheckedChangeListener { _, isChecked ->
-                (context as? IdleSlayerBotService)?.isFullAfkMode = isChecked
+        // Кнопка закрытия/скрытия панели
+        val closeButton = Button(context).apply {
+            text = "✕"
+            setOnClickListener {
+                remove()
             }
         }
 
-        layout.addView(title)
-        layout.addView(autoclickerSwitch)
-        layout.addView(afkSwitch)
+        layout.addView(clickButton)
+        layout.addView(closeButton)
 
         floatingView = layout
         try {
