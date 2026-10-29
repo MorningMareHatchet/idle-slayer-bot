@@ -2,6 +2,7 @@ package com.example.idleslayerbot
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.os.Build
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -11,16 +12,23 @@ import android.widget.Switch
 
 class FloatingControlPanel(private val context: Context) {
 
-    private var windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var floatingView: View? = null
 
     fun show() {
         if (floatingView != null) return
 
-        val layoutParams = WindowManager.LayoutParams(
+        val layoutParamsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            @Suppress("DEPRECATION")
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
+
+        val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            layoutParamsType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
@@ -29,44 +37,55 @@ class FloatingControlPanel(private val context: Context) {
             y = 100
         }
 
-        val inflater = LayoutInflater.from(context)
-        floatingView = inflater.inflate(R.layout.floating_panel_layout, null)
-
-        val switchAutoclicker = floatingView?.findViewById<Switch>(R.id.switchAutoclicker)
-        val switchUpgrades = floatingView?.findViewById<Switch>(R.id.switchUpgrades)
-        val switchChestHunt = floatingView?.findViewById<Switch>(R.id.switchChestHunt)
-        val switchFullAfk = floatingView?.findViewById<Switch>(R.id.switchFullAfk)
-        val btnRunChestHunt = floatingView?.findViewById<Button>(R.id.btnRunChestHunt)
-
-        switchAutoclicker?.setOnCheckedChangeListener { _, isChecked ->
-            IdleSlayerBotService.instance?.isAutoclickerActive = isChecked
+        // Простейшая программная панель управления (без XML-разметки)
+        val layout = android.widget.LinearLayout(context).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(android.graphics.Color.parseColor("#CC000000"))
+            setPadding(32, 32, 32, 32)
         }
 
-        switchUpgrades?.setOnCheckedChangeListener { _, isChecked ->
-            IdleSlayerBotService.instance?.isAutoUpgradeActive = isChecked
+        val title = android.widget.TextView(context).apply {
+            text = "Idle Slayer Bot"
+            setTextColor(android.graphics.Color.WHITE)
+            textSize = 14f
+            setPadding(0, 0, 0, 16)
         }
 
-        switchChestHunt?.setOnCheckedChangeListener { _, isChecked ->
-            IdleSlayerBotService.instance?.isChestHuntActive = isChecked
+        val autoclickerSwitch = Switch(context).apply {
+            text = "Автокликер"
+            setTextColor(android.graphics.Color.WHITE)
+            setOnCheckedChangeListener { _, isChecked ->
+                (context as? IdleSlayerBotService)?.isAutoclickerActive = isChecked
+            }
         }
 
-        switchFullAfk?.setOnCheckedChangeListener { _, isChecked ->
-            IdleSlayerBotService.instance?.isFullAfkMode = isChecked
-            switchAutoclicker?.isChecked = isChecked
-            switchUpgrades?.isChecked = isChecked
-            switchChestHunt?.isChecked = isChecked
+        val afkSwitch = Switch(context).apply {
+            text = "Full AFK Режим"
+            setTextColor(android.graphics.Color.WHITE)
+            setOnCheckedChangeListener { _, isChecked ->
+                (context as? IdleSlayerBotService)?.isFullAfkMode = isChecked
+            }
         }
 
-        btnRunChestHunt?.setOnClickListener {
-            IdleSlayerBotService.instance?.executeChestHuntStrategy()
-        }
+        layout.addView(title)
+        layout.addView(autoclickerSwitch)
+        layout.addView(afkSwitch)
 
-        windowManager.addView(floatingView, layoutParams)
+        floatingView = layout
+        try {
+            windowManager.addView(floatingView, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    fun hide() {
+    fun remove() {
         floatingView?.let {
-            windowManager.removeView(it)
+            try {
+                windowManager.removeView(it)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             floatingView = null
         }
     }
