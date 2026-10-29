@@ -3,6 +3,8 @@ package com.example.idleslayerbot
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -16,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusTextView: TextView
     private lateinit var toggleServiceButton: Button
     private lateinit var showPanelButton: Button
+    private lateinit var overlayPermissionButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +41,25 @@ class MainActivity : AppCompatActivity() {
             text = "Статус: Проверка..."
             textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 48)
+            setPadding(0, 0, 0, 32)
+        }
+
+        // Кнопка для выдачи разрешения поверх других окон
+        overlayPermissionButton = Button(this).apply {
+            text = "1. Разрешить поверх окон"
+            setOnClickListener {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                    startActivity(intent)
+                }
+            }
         }
 
         toggleServiceButton = Button(this).apply {
-            text = "Настройки доступности"
+            text = "2. Включить службу доступности"
             setOnClickListener {
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                 startActivity(intent)
@@ -61,6 +78,7 @@ class MainActivity : AppCompatActivity() {
 
         layout.addView(titleTextView)
         layout.addView(statusTextView)
+        layout.addView(overlayPermissionButton)
         layout.addView(toggleServiceButton)
         layout.addView(showPanelButton)
 
@@ -69,15 +87,25 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val serviceRunning = IdleSlayerBotService.isInstanceRunning()
-        if (serviceRunning) {
-            statusTextView.text = "Статус: Работает ✅"
-            statusTextView.setTextColor(Color.GREEN)
-            toggleServiceButton.text = "Служба активна"
+        
+        // Проверяем разрешение поверх окон
+        val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
         } else {
-            statusTextView.text = "Статус: Остановлен ❌\nВключите службу в настройках"
+            true
+        }
+
+        val serviceRunning = IdleSlayerBotService.isInstanceRunning()
+
+        if (serviceRunning && hasOverlay) {
+            statusTextView.text = "Статус: Все готово и работает ✅"
+            statusTextView.setTextColor(Color.GREEN)
+        } else if (!hasOverlay) {
+            statusTextView.text = "Статус: Нет разрешения поверх окон ⚠️\nНажмите кнопку 1"
+            statusTextView.setTextColor(Color.YELLOW)
+        } else {
+            statusTextView.text = "Статус: Служба выключена ❌\nВключите пункт 2"
             statusTextView.setTextColor(Color.RED)
-            toggleServiceButton.text = "Включить службу доступности"
         }
     }
 }
