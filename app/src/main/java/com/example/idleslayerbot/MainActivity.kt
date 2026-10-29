@@ -3,22 +3,20 @@ package com.example.idleslayerbot
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var statusTextView: TextView
     private lateinit var toggleServiceButton: Button
-    private lateinit var showPanelButton: Button
-    private lateinit var overlayPermissionButton: Button
+    private lateinit var clickerButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,70 +39,51 @@ class MainActivity : AppCompatActivity() {
             text = "Статус: Проверка..."
             textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 32)
-        }
-
-        // Кнопка для выдачи разрешения поверх других окон
-        overlayPermissionButton = Button(this).apply {
-            text = "1. Разрешить поверх окон"
-            setOnClickListener {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
-                    )
-                    startActivity(intent)
-                }
-            }
+            setPadding(0, 0, 0, 48)
         }
 
         toggleServiceButton = Button(this).apply {
-            text = "2. Включить службу доступности"
+            text = "Настройки доступности"
             setOnClickListener {
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                 startActivity(intent)
             }
         }
 
-        showPanelButton = Button(this).apply {
-            text = "Показать плавающую панель"
+        // Кнопка для отправки сигнала кликеру прямо из приложения
+        clickerButton = Button(this).apply {
+            text = "⚡ Сделать тестовый клик в игре"
             setOnClickListener {
-                val intent = Intent(this@MainActivity, IdleSlayerBotService::class.java).apply {
-                    action = "ACTION_SHOW_PANEL"
+                if (IdleSlayerBotService.isInstanceRunning()) {
+                    // Отправляем команду службе кликнуть в центр экрана
+                    val intent = Intent(this@MainActivity, IdleSlayerBotService::class.java).apply {
+                        action = "ACTION_CLICK"
+                        putExtra("x", 500f)
+                        putExtra("y", 1200f)
+                    }
+                    startService(intent)
+                    Toast.makeText(this@MainActivity, "Клик отправлен!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Сначала включите службу доступности!", Toast.LENGTH_LONG).show()
                 }
-                startService(intent)
             }
         }
 
         layout.addView(titleTextView)
         layout.addView(statusTextView)
-        layout.addView(overlayPermissionButton)
         layout.addView(toggleServiceButton)
-        layout.addView(showPanelButton)
+        layout.addView(clickerButton)
 
         setContentView(layout)
     }
 
     override fun onResume() {
         super.onResume()
-        
-        // Проверяем разрешение поверх окон
-        val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(this)
-        } else {
-            true
-        }
-
-        val serviceRunning = IdleSlayerBotService.isInstanceRunning()
-
-        if (serviceRunning && hasOverlay) {
-            statusTextView.text = "Статус: Все готово и работает ✅"
+        if (IdleSlayerBotService.isInstanceRunning()) {
+            statusTextView.text = "Статус: Служба работает ✅"
             statusTextView.setTextColor(Color.GREEN)
-        } else if (!hasOverlay) {
-            statusTextView.text = "Статус: Нет разрешения поверх окон ⚠️\nНажмите кнопку 1"
-            statusTextView.setTextColor(Color.YELLOW)
         } else {
-            statusTextView.text = "Статус: Служба выключена ❌\nВключите пункт 2"
+            statusTextView.text = "Статус: Служба выключена ❌"
             statusTextView.setTextColor(Color.RED)
         }
     }
