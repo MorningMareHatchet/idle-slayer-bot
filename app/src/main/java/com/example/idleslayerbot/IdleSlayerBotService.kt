@@ -23,7 +23,7 @@ class IdleSlayerBotService : AccessibilityService() {
     private var windowManager: WindowManager? = null
     private var floatingView: View? = null
 
-    companion5 object { // Проверяй, чтобы тут было обычное companion object, если вылезет ошибка — поправим на companion object
+    companion object {
         var instance: IdleSlayerBotService? = null
             private set
         fun isInstanceRunning(): Boolean = instance != null
@@ -77,7 +77,7 @@ class IdleSlayerBotService : AccessibilityService() {
 
             val layout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setBackgroundColor(Color.parseColor("#E6000000")) // Полупрозрачный черный
+                setBackgroundColor(Color.parseColor("#E6000000"))
                 setPadding(32, 32, 32, 32)
             }
 
