@@ -6,8 +6,15 @@ import android.view.accessibility.AccessibilityEvent
 
 class IdleSlayerBotService : AccessibilityService() {
 
+    // Переменные состояния для панели управления
+    var isAutoclickerActive = false
+    var isAutoUpgradeActive = false
+    var isChestHuntActive = false
+    var isFullAfkMode = false
+
     companion object {
-        private var instance: IdleSlayerBotService? = null
+        var instance: IdleSlayerBotService? = null
+            private set
         fun isInstanceRunning(): Boolean = instance != null
     }
 
@@ -18,18 +25,20 @@ class IdleSlayerBotService : AccessibilityService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "ACTION_SHOW_PANEL") {
-            // Здесь будет вызов показа панели, если требуется
+            // Логика вызова панели при необходимости
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Обязательный метод для AccessibilityService
+    fun executeChestHuntStrategy() {
+        // Логика расчета сундуков
     }
 
-    override fun onInterrupt() {
-        // Обязательный метод для AccessibilityService
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        // Основной цикл обработки событий игры
     }
+
+    override fun onInterrupt() {}
 
     override fun onDestroy() {
         super.onDestroy()
