@@ -1,6 +1,6 @@
 package com.example.idleslayerbot
 
-accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
@@ -31,7 +31,6 @@ class IdleSlayerBotService : AccessibilityService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    // Метод имитации тапа по экрану (как в настоящих автокликерах)
     fun clickAt(x: Float, y: Float) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val path = Path().apply {
