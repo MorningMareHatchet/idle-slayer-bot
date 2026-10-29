@@ -12,6 +12,8 @@ class IdleSlayerBotService : AccessibilityService() {
     var isChestHuntActive = false
     var isFullAfkMode = false
 
+    private var floatingPanel: FloatingControlPanel? = null
+
     companion object {
         var instance: IdleSlayerBotService? = null
             private set
@@ -21,13 +23,23 @@ class IdleSlayerBotService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        
+        // Автоматически создаем и показываем плавающую панель при включении службы
+        showFloatingPanel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "ACTION_SHOW_PANEL") {
-            // Логика вызова панели при необходимости
+            showFloatingPanel()
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun showFloatingPanel() {
+        if (floatingPanel == null) {
+            floatingPanel = FloatingControlPanel(this)
+        }
+        floatingPanel?.show()
     }
 
     fun executeChestHuntStrategy() {
@@ -42,6 +54,8 @@ class IdleSlayerBotService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        floatingPanel?.remove()
+        floatingPanel = null
         instance = null
     }
 }
