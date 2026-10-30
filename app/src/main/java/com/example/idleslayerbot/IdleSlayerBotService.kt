@@ -2,12 +2,11 @@ package com.example.idleslayerbot
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import rikka.shizuku.Shizuku
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class IdleSlayerBotService : AccessibilityService() {
 
@@ -63,17 +62,12 @@ class IdleSlayerBotService : AccessibilityService() {
         handler.removeCallbacks(clickRunnable)
     }
 
-    // Движок кликов через Shizuku (без Root, но с системными правами отладки)
     private fun executeShizukuClick(x: Float, y: Float) {
         try {
-            // Проверяем, запущен ли Shizuku и есть ли у нас разрешение
-            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 val cmd = arrayOf("input", "tap", x.toInt().toString(), y.toInt().toString())
                 val process = Shizuku.newProcess(cmd, null, null)
                 process.waitFor()
-            } else {
-                // Запасной вариант на случай, если Shizuku не активен — обычный dispatchGesture
-                // (если и он не сработает, значит нужно просто выдать разрешение Shizuku в приложении)
             }
         } catch (e: Exception) {
             e.printStackTrace()
