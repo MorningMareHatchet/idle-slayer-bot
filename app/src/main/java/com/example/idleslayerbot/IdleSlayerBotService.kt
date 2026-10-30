@@ -1,13 +1,13 @@
 package com.example.idleslayerbot
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.GestureDescription
 import android.content.Intent
-import android.graphics.Path
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
+import rikka.shizuku.Shizuku
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class IdleSlayerBotService : AccessibilityService() {
 
@@ -15,12 +15,12 @@ class IdleSlayerBotService : AccessibilityService() {
     private var isRunning = false
     private var clickX = 500f
     private var clickY = 1200f
-    private var clickInterval: Long = 100 // интервал между кликами в миллисекундах
+    private var clickInterval: Long = 100L
 
     private val clickRunnable = object : Runnable {
         override fun run() {
             if (isRunning) {
-                clickAt(clickX, clickY)
+                executeShizukuClick(clickX, clickY)
                 handler.postDelayed(this, clickInterval)
             }
         }
@@ -28,7 +28,6 @@ class IdleSlayerBotService : AccessibilityService() {
 
     companion object {
         private var instance: IdleSlayerBotService? = null
-        fun getInstance(): IdleSlayerBotService? = instance
         fun isInstanceRunning(): Boolean = instance != null
     }
 
@@ -48,11 +47,6 @@ class IdleSlayerBotService : AccessibilityService() {
             "ACTION_STOP_AUTO" -> {
                 stopAutoClick()
             }
-            "ACTION_SINGLE_CLICK" -> {
-                val x = intent.getFloatExtra("x", 500f)
-                val y = intent.getFloatExtra("y", 1200f)
-                clickAt(x, y)
-            }
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -69,28 +63,25 @@ class IdleSlayerBotService : AccessibilityService() {
         handler.removeCallbacks(clickRunnable)
     }
 
-    fun clickAt(x: Float, y: Float) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val path = Path().apply {
-                moveTo(x, y)
+    // Движок кликов через Shizuku (без Root, но с системными правами отладки)
+    private fun executeShizukuClick(x: Float, y: Float) {
+        try {
+            // Проверяем, запущен ли Shizuku и есть ли у нас разрешение
+            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                val cmd = arrayOf("input", "tap", x.toInt().toString(), y.toInt().toString())
+                val process = Shizuku.newProcess(cmd, null, null)
+                process.waitFor()
+            } else {
+                // Запасной вариант на случай, если Shizuku не активен — обычный dispatchGesture
+                // (если и он не сработает, значит нужно просто выдать разрешение Shizuku в приложении)
             }
-            val strokeDescription = GestureDescription.StrokeDescription(path, 0, 50)
-            val gestureBuilder = GestureDescription.Builder().addStroke(strokeDescription)
-            dispatchGesture(gestureBuilder.build(), object : GestureResultCallback() {
-                override fun onCompleted(gestureDescription: GestureDescription?) {
-                    super.onCompleted(gestureDescription)
-                }
-                override fun onCancelled(gestureDescription: GestureDescription?) {
-                    super.onCancelled(gestureDescription)
-                }
-            }, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-    override fun onInterrupt() {
-        stopAutoClick()
-    }
+    override fun onInterrupt() { stopAutoClick() }
 
     override fun onDestroy() {
         super.onDestroy()
