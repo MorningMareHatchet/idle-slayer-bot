@@ -5,9 +5,26 @@ import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 
 class IdleSlayerBotService : AccessibilityService() {
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var isRunning = false
+    private var clickX = 500f
+    private var clickY = 1200f
+    private var clickInterval: Long = 100 // интервал между кликами в миллисекундах
+
+    private val clickRunnable = object : Runnable {
+        override fun run() {
+            if (isRunning) {
+                clickAt(clickX, clickY)
+                handler.postDelayed(this, clickInterval)
+            }
+        }
+    }
 
     companion object {
         private var instance: IdleSlayerBotService? = null
@@ -21,12 +38,35 @@ class IdleSlayerBotService : AccessibilityService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == "ACTION_CLICK") {
-            val x = intent.getFloatExtra("x", 500f)
-            val y = intent.getFloatExtra("y", 1000f)
-            clickAt(x, y)
+        when (intent?.action) {
+            "ACTION_START_AUTO" -> {
+                clickX = intent.getFloatExtra("x", 500f)
+                clickY = intent.getFloatExtra("y", 1200f)
+                clickInterval = intent.getLongExtra("interval", 100L)
+                startAutoClick()
+            }
+            "ACTION_STOP_AUTO" -> {
+                stopAutoClick()
+            }
+            "ACTION_SINGLE_CLICK" -> {
+                val x = intent.getFloatExtra("x", 500f)
+                val y = intent.getFloatExtra("y", 1200f)
+                clickAt(x, y)
+            }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun startAutoClick() {
+        if (!isRunning) {
+            isRunning = true
+            handler.post(clickRunnable)
+        }
+    }
+
+    private fun stopAutoClick() {
+        isRunning = false
+        handler.removeCallbacks(clickRunnable)
     }
 
     fun clickAt(x: Float, y: Float) {
@@ -48,10 +88,13 @@ class IdleSlayerBotService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-    override fun onInterrupt() {}
+    override fun onInterrupt() {
+        stopAutoClick()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopAutoClick()
         instance = null
     }
 }
