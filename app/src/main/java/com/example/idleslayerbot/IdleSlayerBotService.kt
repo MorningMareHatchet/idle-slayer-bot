@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import rikka.shizuku.Shizuku
+import java.io.OutputStream
 
 class IdleSlayerBotService : AccessibilityService() {
 
@@ -65,8 +66,16 @@ class IdleSlayerBotService : AccessibilityService() {
     private fun executeShizukuClick(x: Float, y: Float) {
         try {
             if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                // Используем рефлексию или доступ к Shizuku API для обхода ограничений видимости приватных методов
+                val method = Shizuku::class.java.getDeclaredMethod(
+                    "newProcess",
+                    Array<String>::class.java,
+                    Array<String>::class.java,
+                    String::class.java
+                )
+                method.isAccessible = true
                 val cmd = arrayOf("input", "tap", x.toInt().toString(), y.toInt().toString())
-                val process = Shizuku.newProcess(cmd, null, null)
+                val process = method.invoke(null, cmd, null, null) as Process
                 process.waitFor()
             }
         } catch (e: Exception) {
